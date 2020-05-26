@@ -37,6 +37,7 @@ class Mhelper
 
 		// main process
 		$query 	= $this->model_student::select($selected)
+															->where("deleted", 0)
 															->skip($skip_data)
 															->take($limit)
 															->get();
@@ -65,9 +66,16 @@ class Mhelper
 		return $result;
 	}
 
+	function totalData()
+	{
+		$query = $this->model_student::where("deleted", 0)->count();
+
+		return $query;
+	}
+
 	function saveData($request=array())
 	{
-		$result 	= FALSE;
+		$result 	= 0;
 		if (count($request) > 0) 
 		{
 			$content['student_uuid']			= $this->uuid::uuid4()->toString();
@@ -76,11 +84,11 @@ class Mhelper
 			$content['student_address']		= isset($request['student_address']) ? $request['student_address'] : "";
 			$content['student_gender']		= isset($request['student_gender']) ? $request['student_gender'] : "";
 
-			$query 	= $this->model_student::insert($content);
+			$lastID 	= $this->model_student::insertGetId($content);
 			
-			if ($query == 1) 
+			if ($lastID > 0) 
 			{
-				$result 	= TRUE;
+				$result 	= $lastID;
 			}
 		}
 
@@ -103,12 +111,11 @@ class Mhelper
 		return $result;
 	}
 
-	function updateData($request=array())
+	function updateData($request=array(), $student_uuid="")
 	{
 		$result 	= FALSE;
-		if (count($request) > 0 && isset($request['student_uuid']))
+		if (count($request) > 0 && $student_uuid !== "")
 		{
-			$student_uuid 	= $request['student_uuid'];
 			$content['student_name']			= isset($request['student_name']) ? $request['student_name'] : "";
 			$content['student_class']			= isset($request['student_class']) ? $request['student_class'] : "";
 			$content['student_address']		= isset($request['student_address']) ? $request['student_address'] : "";

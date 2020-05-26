@@ -20,18 +20,18 @@ class StudentController extends Controller
 
 
   /* ============================== CRUD ============================== */
-  public function list(Request $request)
+  public function list($page=0, $limit=0)
   {
     // defined var
-    $request      = $request->all();
+    // $request      = $request->all();
     $mStudent     = new student_model();
     
     // initialization
     $status     = 500;
     $msg        = "error";
     $data       = Array();
-    $page       = isset($request['page']) ? $request['page'] : 1;
-    $limit      = isset($request['limit']) ? $request['limit'] : 10;
+    $page       = ($page > 0)   ? $page   : 1;
+    $limit      = ($limit > 0)  ? $limit  : 10;
 
     // main process
     $process    = $mStudent->listData($page, $limit);
@@ -42,7 +42,7 @@ class StudentController extends Controller
       $data       = array(
                   "page_current"    => (int) $page, 
                   "page_limit"      => $limit,
-                  "total"           => DB::table("student")->count(),
+                  "total"           => $mStudent->totalData(),
                   "content"         => $process,   
                   );
     }
@@ -71,22 +71,22 @@ class StudentController extends Controller
     // initialization
     $status     = 500;
     $msg        = "error";
-    $data       = FALSE;
+    $data       = array();
 
     // main process
     if (is_array($request) && count($request) > 0 && !isset($request['student_uuid'])) 
     {
       $process  = $mStudent->saveData($request);
-      if ($process == TRUE) 
+      if ($process > 0) 
       {
         $status = 200;
         $msg    = "success";
-        $data   = TRUE;
+        $data   = array("last_id" => $process);
       }
       else
       {
         $msg      = "failed_save_data";
-        $data     = FALSE;
+        $data     = 0;
       }
     }
 
@@ -99,10 +99,10 @@ class StudentController extends Controller
     return response()->json($result);
   }
 
-  public function detail(Request $request)
+  public function detail($student_uuid="")
   {
     // defined var
-    $request    = $request->all();
+    // $request    = $request->all();
     $mStudent   = new student_model();
     
     // initialization
@@ -111,9 +111,8 @@ class StudentController extends Controller
     $data       = array();
 
     // main process
-    if (isset($request['student_uuid']) && $request['student_uuid'] !== "") 
+    if ($student_uuid !== "") 
     {
-      $student_uuid   = $request['student_uuid'];
       $process        = $mStudent->detailData($student_uuid);
 
       if (count($process) > 0) 
@@ -138,7 +137,7 @@ class StudentController extends Controller
     return response()->json($result);
   }
 
-  public function update(Request $request)
+  public function update(Request $request, $student_uuid="")
   {
     // defined var
     $request    = $request->all();
@@ -150,9 +149,9 @@ class StudentController extends Controller
     $data       = FALSE;
 
     // main process
-    if (is_array($request) && count($request) > 0 && isset($request['student_uuid'])) 
+    if (is_array($request) && count($request) > 0 && $student_uuid !== "") 
     {
-      $process  = $mStudent->updateData($request);
+      $process  = $mStudent->updateData($request, $student_uuid);
       if ($process == TRUE) 
       {
         $status = 200;
@@ -175,10 +174,10 @@ class StudentController extends Controller
     return response()->json($result);
   }
 
-  public function delete(Request $request)
+  public function delete($student_uuid="")
   {
     // defined var
-    $request    = $request->all();
+    // $request    = $request->all();
     $mStudent     = new student_model();
     
     // initialization
@@ -186,13 +185,13 @@ class StudentController extends Controller
     $msg        = "error";
     $data       = FALSE;
 
-    if (isset($request['student_uuid'])) 
+    if ($student_uuid !=="") 
     {
-      $process  = $mStudent->deleteData($request['student_uuid']);
+      $process  = $mStudent->deleteData($student_uuid);
       if ($process == TRUE) 
       {
         $status = 200;
-        $msg    = "success";
+        $msg    = "deleted";
         $data   = TRUE;
       }
       else
